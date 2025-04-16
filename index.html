@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>LockSurf Browser UI</title>
+  <meta name="description" content="A customizable, private web browser UI. Open-source and themeable." />
+  <style>
+    :root {
+      --bg: #0f0f0f;
+      --text: #ffffff;
+      --accent: #00ffe1;
+      --search-bg: #1c1c1c;
+      --menu-bg: #1a1a1a;
+    }
+
+    body.light {
+      --bg: #f0f0f0;
+      --text: #111;
+      --accent: #0078ff;
+      --search-bg: #ffffff;
+      --menu-bg: #eaeaea;
+    }
+
+    * {
+      box-sizing: border-box;
+      transition: all 0.3s ease;
+      font-family: 'Segoe UI', sans-serif;
+    }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    .search-container {
+      text-align: center;
+      animation: fadeIn 1s ease-in-out;
+    }
+
+    .search-bar {
+      padding: 1rem 2rem;
+      font-size: 1.2rem;
+      border: none;
+      border-radius: 2rem;
+      width: 80vw;
+      max-width: 600px;
+      background: var(--search-bg);
+      color: var(--text);
+      outline: none;
+      box-shadow: 0 0 15px rgba(0, 255, 255, 0.1);
+    }
+
+    .search-bar:focus {
+      box-shadow: 0 0 10px var(--accent);
+    }
+
+    .menu-button {
+      position: absolute;
+      top: 1rem;
+      right: 1rem;
+      background: transparent;
+      border: none;
+      color: var(--text);
+      font-size: 1.8rem;
+      cursor: pointer;
+      z-index: 10;
+    }
+
+    .menu-panel {
+      position: fixed;
+      top: 0;
+      right: 0;
+      width: 300px;
+      height: 100%;
+      background: var(--menu-bg);
+      transform: translateX(100%);
+      transition: transform 0.3s ease;
+      padding: 2rem;
+      box-shadow: -2px 0 20px rgba(0, 0, 0, 0.5);
+      z-index: 9;
+      overflow-y: auto;
+    }
+
+    .menu-panel.open {
+      transform: translateX(0%);
+    }
+
+    .menu-panel h2 {
+      margin-top: 0;
+      font-size: 1.5rem;
+    }
+
+    .setting-option {
+      margin: 1.5rem 0;
+      font-size: 1rem;
+    }
+
+    select, input[type="checkbox"] {
+      margin-top: 0.5rem;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @media (max-width: 600px) {
+      .menu-panel {
+        width: 100%;
+      }
+      .search-bar {
+        width: 90vw;
+      }
+    }
+
+    .footer {
+      position: absolute;
+      bottom: 1rem;
+      font-size: 0.8rem;
+      opacity: 0.6;
+    }
+  </style>
+</head>
+<body>
+  <button class="menu-button" onclick="toggleMenu()">☰</button>
+
+  <div class="search-container">
+    <input
+      type="text"
+      class="search-bar"
+      placeholder="Search privately..."
+      id="searchInput"
+      onkeydown="handleKey(event)"
+    />
+  </div>
+
+  <div class="menu-panel" id="menuPanel">
+    <h2>Settings</h2>
+
+    <div class="setting-option">
+      <label for="themeToggle">
+        <input type="checkbox" id="themeToggle" />
+        Toggle Light/Dark Theme
+      </label>
+    </div>
+
+    <div class="setting-option">
+      <label for="engineSelect">Search Engine</label><br/>
+      <select id="engineSelect">
+        <option value="https://duckduckgo.com/?q=">DuckDuckGo</option>
+        <option value="https://www.google.com/search?q=">Google</option>
+        <option value="https://www.bing.com/search?q=">Bing</option>
+        <option value="https://search.brave.com/search?q=">Brave</option>
+      </select>
+    </div>
+
+    <div class="setting-option">
+      <label>
+        <input type="checkbox" disabled />
+        Block Ads (coming soon)
+      </label>
+    </div>
+
+    <div class="setting-option">
+      <label>
+        <input type="checkbox" disabled />
+        Use Encrypted DNS (coming soon)
+      </label>
+    </div>
+  </div>
+
+  <div class="footer">🔒 Open Source | LockSurf Browser UI – MIT Licensed</div>
+
+  <script>
+    const menuPanel = document.getElementById("menuPanel");
+    const themeToggle = document.getElementById("themeToggle");
+    const engineSelect = document.getElementById("engineSelect");
+
+    function toggleMenu() {
+      menuPanel.classList.toggle("open");
+    }
+
+    function toggleTheme() {
+      const isLight = document.body.classList.toggle("light");
+      localStorage.setItem("theme", isLight ? "light" : "dark");
+    }
+
+    function handleKey(event) {
+      if (event.key === "Enter") {
+        const query = document.getElementById("searchInput").value;
+        const engine = engineSelect.value;
+        if (query.trim() !== "") {
+          window.open(`${engine}${encodeURIComponent(query)}`, "_blank");
+        }
+      }
+    }
+
+    // Load settings on startup
+    window.addEventListener("DOMContentLoaded", () => {
+      // Theme
+      const savedTheme = localStorage.getItem("theme");
+      if (savedTheme === "light") {
+        document.body.classList.add("light");
+        themeToggle.checked = true;
+      }
+
+      // Search engine
+      const savedEngine = localStorage.getItem("engine");
+      if (savedEngine) {
+        engineSelect.value = savedEngine;
+      }
+
+      engineSelect.addEventListener("change", () => {
+        localStorage.setItem("engine", engineSelect.value);
+      });
+
+      themeToggle.addEventListener("change", toggleTheme);
+    });
+  </script>
+</body>
+</html>
+<!-- This is a simple HTML/CSS/JavaScript template for a customizable browser UI. 
+     It includes a search bar, settings menu, and light/dark theme toggle functionality. 
+     The code is designed to be clean and easy to understand, with comments explaining each section. -->
